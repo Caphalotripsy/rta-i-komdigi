@@ -1,3 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@source "../**/*.blade.php";
+@source "../**/*.js";
+
+@theme {
+  --color-primary: #0350A0;
+  --color-secondary: #037FBF;
+  --color-sky: #00A1E9;
+  --color-accent: #FCCA13;
+  --color-danger: #A11F29;
+}

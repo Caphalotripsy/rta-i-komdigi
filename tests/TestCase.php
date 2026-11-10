@@ -6,5 +6,11 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-    //
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Agar tes tidak gagal bila `npm run dev/build` belum dijalankan.
+        $this->withoutVite();
+    }
 }
