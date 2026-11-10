@@ -9,7 +9,7 @@ Route::redirect('/', '/dashboard');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('/login', [AuthController::class, 'login']);
 });
 
 Route::middleware('auth')->group(function () {
@@ -20,6 +20,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:kepala_divisi')->group(function () {
         Route::resource('pengajuan', PengajuanController::class);
         Route::post('pengajuan/{pengajuan}/ajukan', [PengajuanController::class, 'ajukan'])->name('pengajuan.ajukan');
+        Route::get('pengajuan/{pengajuan}/lapor', [PengajuanController::class, 'lapor'])->name('pengajuan.lapor');
+        Route::post('pengajuan/{pengajuan}/lapor', [PengajuanController::class, 'simpanLaporan'])->name('pengajuan.lapor.simpan');
     });
 
     // Modul berikutnya ditambahkan di sini, contoh:

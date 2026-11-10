@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\Kategori;
+use App\Enums\Satuan;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,6 +22,7 @@ class PengajuanRequest extends FormRequest
             'kategori' => ['required', Rule::enum(Kategori::class)],
             'spesifikasi' => ['nullable', 'string', 'max:2000'],
             'kuantitas' => ['required', 'integer', 'min:1', 'max:9999'],
+            'satuan' => ['required', Rule::enum(Satuan::class)],
             'harga_estimasi' => ['required', 'numeric', 'min:1', 'max:1000000000'],
             'aksi' => ['nullable', Rule::in(['draft', 'ajukan'])],
         ];
@@ -46,6 +48,8 @@ class PengajuanRequest extends FormRequest
             'kuantitas.integer' => 'Kuantitas harus berupa bilangan bulat.',
             'kuantitas.min' => 'Kuantitas minimal 1.',
             'kuantitas.max' => 'Kuantitas maksimal 9.999.',
+            'satuan.required' => 'Satuan wajib dipilih.',
+            'satuan.enum' => 'Satuan tidak valid.',
             'harga_estimasi.required' => 'Harga estimasi wajib diisi.',
             'harga_estimasi.numeric' => 'Harga estimasi harus berupa angka (tanpa titik atau koma pemisah ribuan).',
             'harga_estimasi.min' => 'Harga estimasi minimal Rp 1.',

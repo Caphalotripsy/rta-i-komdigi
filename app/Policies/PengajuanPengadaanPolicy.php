@@ -26,4 +26,9 @@ class PengajuanPengadaanPolicy
     {
         return $user->id === $p->pemohon_id && $p->status === StatusPengajuan::Draft;
     }
+
+    public function lapor(User $user, PengajuanPengadaan $p): bool
+    {
+        return $user->id === $p->pemohon_id && $p->bisaLaporHarga();
+    }
 }

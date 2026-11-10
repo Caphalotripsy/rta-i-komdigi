@@ -30,6 +30,7 @@ class PengajuanTest extends TestCase
             'kategori' => 'aset',
             'spesifikasi' => 'RAM 16GB',
             'kuantitas' => 2,
+            'satuan' => 'unit',
             'harga_estimasi' => 10000000,
         ];
     }
@@ -66,8 +67,8 @@ class PengajuanTest extends TestCase
 
     public function test_validasi(): void
     {
-        $this->actingAs($this->kadiv)->post('/pengajuan', $this->data(['kuantitas' => 0, 'kategori' => 'lain']))
-            ->assertSessionHasErrors(['kuantitas', 'kategori']);
+        $this->actingAs($this->kadiv)->post('/pengajuan', $this->data(['kuantitas' => 0, 'kategori' => 'lain', 'satuan' => 'meter']))
+            ->assertSessionHasErrors(['kuantitas', 'kategori', 'satuan']);
 
         $this->assertDatabaseCount('pengajuan_pengadaan', 0);
     }

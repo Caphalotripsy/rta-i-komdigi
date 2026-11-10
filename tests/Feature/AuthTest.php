@@ -23,7 +23,7 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->create(['role' => Role::Ppk]);
 
-        $this->post('/login', ['email' => $user->email, 'password' => 'password'])
+        $this->post('/login', ['username' => $user->username, 'password' => 'password'])
             ->assertRedirect(route('dashboard'));
 
         $this->get('/dashboard')->assertOk()->assertSee('PPK');
@@ -34,11 +34,36 @@ class AuthTest extends TestCase
         $user = User::factory()->create();
 
         $this->from('/login')
-            ->post('/login', ['email' => $user->email, 'password' => 'salah'])
+            ->post('/login', ['username' => $user->username, 'password' => 'salah'])
             ->assertRedirect('/login')
-            ->assertSessionHasErrors('email');
+            ->assertSessionHasErrors('username');
 
         $this->assertGuest();
+    }
+
+    public function test_username_tidak_peka_huruf_besar_kecil(): void
+    {
+        $user = User::factory()->create(['username' => 'budi.santoso']);
+
+        $this->post('/login', ['username' => '  Budi.Santoso ', 'password' => 'password'])
+            ->assertRedirect(route('dashboard'));
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_login_dibatasi_setelah_lima_kali_salah(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (range(1, 5) as $_) {
+            $this->post('/login', ['username' => $user->username, 'password' => 'salah']);
+        }
+
+        $this->from('/login')
+            ->post('/login', ['username' => $user->username, 'password' => 'password'])
+            ->assertSessionHasErrors('username');
+
+        $this->assertGuest();
+        $this->get('/login')->assertSee('Terlalu banyak percobaan');
     }
 
     public function test_logout(): void
@@ -65,5 +90,7 @@ class AuthTest extends TestCase
         foreach (Role::cases() as $role) {
             $this->assertDatabaseHas('users', ['role' => $role->value]);
         }
+
+        $this->assertDatabaseHas('users', ['username' => 'ppk', 'role' => Role::Ppk->value]);
     }
 }

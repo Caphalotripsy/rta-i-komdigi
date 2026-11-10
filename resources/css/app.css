@@ -1,12 +1,42 @@
 @import "tailwindcss";
+@import "@fontsource/playfair-display/600.css";
+@import "@fontsource/playfair-display/700.css";
+@import "@fontsource/dm-sans/400.css";
+@import "@fontsource/dm-sans/500.css";
+@import "@fontsource/dm-sans/700.css";
 
 @source "../**/*.blade.php";
 @source "../**/*.js";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
 
+/* Token desain RTA-I. Salin hex dari Figma/Stitch bila ada penyesuaian. */
 @theme {
   --color-primary: #0350A0;
   --color-secondary: #037FBF;
   --color-sky: #00A1E9;
   --color-accent: #FCCA13;
   --color-danger: #A11F29;
+  --color-page: #F2F5F7;
+
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+}
+
+[x-cloak] { display: none !important; }
+
+/* Komponen berulang: pakai kelas ini di Blade agar markup tetap ringkas. */
+@layer components {
+  .card { @apply bg-white rounded-xl border border-slate-200/70 shadow-sm; }
+
+  .label { @apply block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5; }
+  .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-secondary focus:ring-2 focus:ring-secondary/30 focus:outline-none; }
+  .input-error { @apply border-danger focus:border-danger focus:ring-danger/30; }
+  .field-error { @apply mt-1 text-xs font-medium text-danger; }
+  .field-hint { @apply mt-1 text-xs text-slate-500; }
+
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary { @apply bg-primary text-white hover:bg-secondary focus:ring-secondary; }
+  .btn-outline { @apply border border-primary bg-white text-primary hover:bg-sky-50 focus:ring-secondary; }
+  .btn-danger { @apply bg-danger text-white hover:bg-red-800 focus:ring-danger; }
+  .btn-ghost { @apply text-slate-600 hover:bg-slate-100 focus:ring-slate-300; }
 }

@@ -20,4 +20,15 @@ class RiwayatPengajuan extends Model
     {
         return $this->belongsTo(User::class, 'aktor_id');
     }
+
+    public function jenisMasalahLabel(): ?string
+    {
+        return match ($this->jenis_masalah) {
+            'nominal' => 'Nominal tidak sesuai',
+            'kuantitas' => 'Kuantitas tidak sesuai',
+            'spesifikasi' => 'Barang tidak sesuai spesifikasi',
+            'dokumen' => 'Dokumen tidak lengkap',
+            default => null,
+        };
+    }
 }

@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Enums\Kategori;
+use App\Enums\Role;
+use App\Enums\Satuan;
 use App\Enums\StatusPengajuan;
 use App\Models\PengajuanPengadaan;
 use App\Models\User;
@@ -22,6 +24,7 @@ class PengajuanPengadaanFactory extends Factory
             'kategori' => fake()->randomElement(Kategori::cases()),
             'spesifikasi' => fake()->sentence(),
             'kuantitas' => $kuantitas,
+            'satuan' => Satuan::Unit,
             'harga_estimasi' => $harga,
             'total_estimasi_biaya' => $kuantitas * $harga,
             'status' => StatusPengajuan::Draft,
@@ -45,5 +48,23 @@ class PengajuanPengadaanFactory extends Factory
                     'catatan' => $catatan,
                 ]);
             });
+    }
+
+    /** Dana sudah dicairkan Bendahara (dana = total estimasi), lengkap dengan entri riwayat. */
+    public function danaCair(): static
+    {
+        return $this->state(['status' => StatusPengajuan::DanaCair])
+            // afterMaking berjalan setelah semua override diterapkan, jadi dana selalu mengikuti total estimasi akhir.
+            ->afterMaking(function (PengajuanPengadaan $p) {
+                $p->dana_dicairkan ??= $p->total_estimasi_biaya;
+            })
+            ->afterCreating(function (PengajuanPengadaan $p) {
+            $p->riwayat()->create([
+                'aktor_id' => User::factory()->create(['role' => Role::Bendahara])->id,
+                'status_dari' => StatusPengajuan::Disetujui->value,
+                'status_ke' => StatusPengajuan::DanaCair->value,
+                'catatan' => 'Dana dicairkan',
+            ]);
+        });
     }
 }

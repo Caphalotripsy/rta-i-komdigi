@@ -64,6 +64,65 @@ class PengajuanService
     }
 
     /**
+     * UC-04: pemohon melaporkan harga aktual. Berlaku saat Dana Dicairkan, atau setelah dikembalikan Keuangan.
+     * Sisa dana > 0  -> Menunggu Pengembalian Dana (Bendahara mengonfirmasi dulu).
+     * Sisa dana = 0  -> langsung Cek Fisik (Divisi Keuangan).
+     *
+     * @param  array<string, mixed>  $data  hasil LaporHargaRequest::validated()
+     */
+    public function laporHarga(PengajuanPengadaan $p, array $data, User $aktor): PengajuanPengadaan
+    {
+        return DB::transaction(function () use ($p, $data, $aktor) {
+            $p = $this->kunci($p);
+
+            if (! $p->bisaLaporHarga()) {
+                throw new StatusTidakValidException(
+                    "Pengajuan berstatus \"{$p->status->label()}\" dan tidak dapat dilaporkan harga aktualnya."
+                );
+            }
+
+            $kuantitas = (int) $data['kuantitas_terbeli'];
+            $harga = (float) $data['harga_aktual'];
+
+            if ($kuantitas < 1 || $kuantitas > $p->kuantitas || $harga <= 0 || $harga > (float) $p->harga_estimasi) {
+                throw new StatusTidakValidException('Kuantitas atau harga aktual melebihi yang diajukan.');
+            }
+
+            $dana = $p->danaDicairkanEfektif();
+            $total = round($kuantitas * $harga, 2);
+            $sisa = round($dana - $total, 2);
+
+            if ($sisa < 0) {
+                throw new StatusTidakValidException('Total biaya aktual melebihi dana yang dicairkan.');
+            }
+
+            $this->pindahStatus(
+                $p,
+                $sisa > 0 ? StatusPengajuan::MenungguPengembalian : StatusPengajuan::CekFisik,
+                $aktor,
+                $sisa > 0
+                    ? 'Harga aktual dilaporkan. Sisa dana wajib dikembalikan ke Bendahara.'
+                    : 'Harga aktual dilaporkan. Tidak ada sisa dana.',
+                null,
+                [
+                    'dana_dicairkan' => $dana,
+                    'kuantitas_terbeli' => $kuantitas,
+                    'harga_aktual' => $harga,
+                    'total_biaya_aktual' => $total,
+                    'sisa_dana' => $sisa,
+                    'status_pengembalian_dana' => false,
+                    'nama_toko' => $data['nama_toko'],
+                    'nomor_nota' => $data['nomor_nota'],
+                    'tanggal_nota' => $data['tanggal_nota'],
+                    'dikembalikan_oleh' => null,
+                ],
+            );
+
+            return $p->refresh();
+        });
+    }
+
+    /**
      * Perpindahan status generik untuk modul lain.
      *
      * @param  list<StatusPengajuan>  $dariStatus  status yang diizinkan sebelum perpindahan
@@ -166,6 +225,7 @@ class PengajuanService
             'kategori' => $data['kategori'],
             'spesifikasi' => $data['spesifikasi'] ?? null,
             'kuantitas' => $kuantitas,
+            'satuan' => $data['satuan'],
             'harga_estimasi' => $harga,
             'total_estimasi_biaya' => round($kuantitas * $harga, 2),
         ];
