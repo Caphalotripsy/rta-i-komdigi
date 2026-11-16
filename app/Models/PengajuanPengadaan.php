@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Kategori;
+use App\Enums\MetodePencairan;
 use App\Enums\Satuan;
 use App\Enums\StatusPengajuan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +35,9 @@ class PengajuanPengadaan extends Model
             'sisa_dana' => 'decimal:2',
             'status_pengembalian_dana' => 'boolean',
             'tanggal_nota' => 'date',
+            'tanggal_pencairan' => 'date',
+            'metode_pencairan' => MetodePencairan::class,
+            'tanggal_pengembalian' => 'date',
             'diproses_inventaris_at' => 'datetime',
         ];
     }

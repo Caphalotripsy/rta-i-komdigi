@@ -37,6 +37,12 @@
         @case('panah')
             <path d="M5 12h14M13 6l6 6-6 6"/>
             @break
+        @case('arsip')
+            <path d="M3 7h18v13H3z"/><path d="M3 7l2-4h14l2 4M10 12h4"/>
+            @break
+        @case('balik')
+            <path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/>
+            @break
         @case('mata')
             <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>
             @break

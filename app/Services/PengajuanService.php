@@ -63,6 +63,76 @@ class PengajuanService
         });
     }
 
+    /** UC-06 (setuju): Diajukan -> Siap Batching. */
+    public function setujuiPengadaan(PengajuanPengadaan $p, User $aktor): PengajuanPengadaan
+    {
+        return $this->ubahStatus(
+            $p, StatusPengajuan::DisetujuiPengadaan, $aktor, [StatusPengajuan::Diajukan],
+            'Lolos tinjauan Pejabat Pengadaan',
+        );
+    }
+
+    /** UC-06 (kembalikan): Diajukan -> Perlu Revisi. Catatan wajib; pemohon memperbaiki lalu kirim ulang ke tahap ini. */
+    public function kembalikanPengadaan(PengajuanPengadaan $p, User $aktor, string $catatan): PengajuanPengadaan
+    {
+        return $this->ubahStatus(
+            $p, StatusPengajuan::Direvisi, $aktor, [StatusPengajuan::Diajukan],
+            $catatan, null, ['dikembalikan_oleh' => 'pengadaan'],
+        );
+    }
+
+    /**
+     * UC-08: Bendahara mencatat pencairan. Dana selalu sama dengan total estimasi (tidak bisa diubah dari input).
+     *
+     * @param  array{tanggal_pencairan: string, metode_pencairan: string, referensi_pencairan?: ?string}  $data
+     */
+    public function catatPencairan(PengajuanPengadaan $p, User $bendahara, array $data): PengajuanPengadaan
+    {
+        $metode = \App\Enums\MetodePencairan::from($data['metode_pencairan']);
+        $dana = (float) $p->total_estimasi_biaya;
+
+        return $this->ubahStatus(
+            $p, StatusPengajuan::DanaCair, $bendahara, [StatusPengajuan::Disetujui],
+            'Dana Rp '.number_format($dana, 0, ',', '.').' dicairkan via '.$metode->label(),
+            null,
+            [
+                'dana_dicairkan' => $dana,
+                'tanggal_pencairan' => $data['tanggal_pencairan'],
+                'metode_pencairan' => $metode,
+                'referensi_pencairan' => $data['referensi_pencairan'] ?? null,
+            ],
+        );
+    }
+
+    /** UC-09: Bendahara mengonfirmasi sisa dana sudah dikembalikan. Menunggu Pengembalian Dana -> Cek Fisik. */
+    public function konfirmasiPengembalian(PengajuanPengadaan $p, User $bendahara, string $tanggal): PengajuanPengadaan
+    {
+        return $this->ubahStatus(
+            $p, StatusPengajuan::CekFisik, $bendahara, [StatusPengajuan::MenungguPengembalian],
+            'Pengembalian sisa dana Rp '.number_format((float) $p->sisa_dana, 0, ',', '.').' dikonfirmasi',
+            null,
+            ['status_pengembalian_dana' => true, 'tanggal_pengembalian' => $tanggal],
+        );
+    }
+
+    /** UC-10/UC-11: verifikasi fisik dan nota valid, request ditutup (Cek Fisik -> Selesai; masuk antrean Inventaris). */
+    public function validasiKeuangan(PengajuanPengadaan $p, User $keuangan): PengajuanPengadaan
+    {
+        return $this->ubahStatus(
+            $p, StatusPengajuan::Selesai, $keuangan, [StatusPengajuan::CekFisik],
+            'Verifikasi fisik dan nota valid. Request ditutup.',
+        );
+    }
+
+    /** UC-10: tidak sesuai. Dikembalikan ke pemohon (Cek Fisik -> Perlu Revisi); pemohon memperbaiki lewat Lapor Harga. */
+    public function kembalikanKeuangan(PengajuanPengadaan $p, User $keuangan, string $jenisMasalah, string $catatan): PengajuanPengadaan
+    {
+        return $this->ubahStatus(
+            $p, StatusPengajuan::Direvisi, $keuangan, [StatusPengajuan::CekFisik],
+            $catatan, $jenisMasalah, ['dikembalikan_oleh' => 'keuangan'],
+        );
+    }
+
     /**
      * UC-04: pemohon melaporkan harga aktual. Berlaku saat Dana Dicairkan, atau setelah dikembalikan Keuangan.
      * Sisa dana > 0  -> Menunggu Pengembalian Dana (Bendahara mengonfirmasi dulu).

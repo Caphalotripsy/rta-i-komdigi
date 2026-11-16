@@ -61,8 +61,8 @@ class TampilanKepalaDivisiTest extends TestCase
 
     public function test_dashboard_peran_lain_dan_menu_sidebar(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Ppk]))->get('/dashboard')
-            ->assertOk()->assertSee('sedang disiapkan')->assertDontSee('Tambah Request');
+        $this->actingAs(User::factory()->create(['role' => Role::Inventaris]))->get('/dashboard')
+            ->assertOk()->assertSee('Dashboard Inventaris')->assertDontSee('Tambah Request');
 
         $this->actingAs($this->kadiv)->get('/dashboard')->assertSee('Tambah Request')->assertSee('Request Saya');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PeriodeBatch;
 use App\Enums\StatusBatch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +17,11 @@ class BatchPengadaan extends Model
 
     protected function casts(): array
     {
-        return ['status' => StatusBatch::class];
+        return [
+            'status' => StatusBatch::class,
+            'periode' => PeriodeBatch::class,
+            'diputuskan_pada' => 'datetime',
+        ];
     }
 
     protected static function booted(): void
@@ -33,8 +38,31 @@ class BatchPengadaan extends Model
         return $this->belongsTo(User::class, 'dibuat_oleh');
     }
 
+    /** PPK yang memutuskan (menyetujui atau mengembalikan) batch ini. */
+    public function pemutus(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'diputuskan_oleh');
+    }
+
     public function pengajuan(): HasMany
     {
         return $this->hasMany(PengajuanPengadaan::class, 'batch_id');
+    }
+
+    /** Total estimasi isi batch; memakai hasil withSum() bila sudah dimuat agar tidak query ulang. */
+    public function totalEstimasi(): float
+    {
+        return (float) ($this->pengajuan_sum_total_estimasi_biaya ?? $this->pengajuan()->sum('total_estimasi_biaya'));
+    }
+
+    public function jumlahRequest(): int
+    {
+        return (int) ($this->pengajuan_count ?? $this->pengajuan()->count());
+    }
+
+    /** Contoh: "Bulanan · November 2026". */
+    public function labelPeriode(): string
+    {
+        return $this->periode->label().' · '.$this->created_at->translatedFormat('F Y');
     }
 }
